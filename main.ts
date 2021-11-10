@@ -1,6 +1,41 @@
 namespace SpriteKind {
     export const effect = SpriteKind.create()
+    export const Missile = SpriteKind.create()
 }
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    sprites.createProjectileFromSprite(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . 2 2 . . . . . . . 
+        . . . . . . 2 2 2 2 . . . . . . 
+        . . . . . . 2 4 4 2 . . . . . . 
+        . . . . . 2 8 4 4 8 2 . . . . . 
+        . . . . . . 4 8 8 4 . . . . . . 
+        . . . . . . . 4 4 . . . . . . . 
+        . . . . . . . 4 4 . . . . . . . 
+        . . . . . . . 4 4 . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, mySprite, 0, -100).setKind(SpriteKind.Missile)
+})
+sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Player, function (sprite, otherSprite) {
+    sprite.destroy()
+    info.changeLifeBy(-1)
+    scene.cameraShake(4, 500)
+})
+sprites.onOverlap(SpriteKind.Missile, SpriteKind.Enemy, function (sprite, otherSprite) {
+    otherSprite.destroy()
+    scene.cameraShake(4, 500)
+})
+let Enemy_projectile: Sprite = null
+let Goon: Sprite = null
+let Captains: Sprite = null
+let mySprite: Sprite = null
+effects.starField.startScreenEffect()
 scene.setBackgroundImage(img`
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -123,8 +158,9 @@ scene.setBackgroundImage(img`
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     `)
-let mySprite = sprites.create(img`
-    . . . . . . . . . . . . . . . . 
+game.setDialogTextColor(2)
+game.showLongText("Survive for reinforcements, pilot!", DialogLayout.Bottom)
+mySprite = sprites.create(img`
     . . . . . . . . . . . . . . . . 
     . . . . . . . . . . . . . . . . 
     . . . . . . . . . . . . . . . . 
@@ -135,36 +171,19 @@ let mySprite = sprites.create(img`
     . . . . . . . . . . . . . . . . 
     . . . . . . . 3 3 . . . . . . . 
     . . . . . . 3 f f 3 . . . . . . 
-    . . . . . 3 . 1 1 . 3 . . . . . 
-    . . . . 3 3 3 f f 3 3 3 . . . . 
-    . . . 4 3 1 3 2 2 3 f 3 4 . . . 
-    . . . . . f 4 4 4 4 1 . . . . . 
-    . . . . 4 3 3 . . 3 3 4 . . . . 
+    . . . . . 3 f 1 1 f 3 . . . . . 
+    . . . . 3 3 f f f f 3 3 . . . . 
+    . . . 4 3 1 f 2 2 f 1 3 4 . . . 
+    . . . . . . 4 4 4 4 . . . . . . 
+    . . . . . 3 . 2 2 . 3 . . . . . 
+    . . . . 2 . f 2 2 f . 2 . . . . 
     `, SpriteKind.Player)
 controller.moveSprite(mySprite, 100, 100)
 mySprite.setStayInScreen(true)
-let vfx1 = sprites.create(img`
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    . . . . . . . . . . . . . . . . 
-    `, SpriteKind.effect)
-game.onUpdateInterval(100, function () {
-    animation.runImageAnimation(
-    vfx1,
-    [img`
+info.setScore(0)
+info.setLife(5)
+game.onUpdateInterval(5000, function () {
+    Captains = sprites.create(img`
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
@@ -173,50 +192,63 @@ game.onUpdateInterval(100, function () {
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
+        . . . . f f . . . f f . . . . . 
+        . . . . f 2 f . f 2 f . . . . . 
+        . . . f 2 2 f f f 2 2 f . . . . 
+        . . . f f 1 2 2 2 1 f f . . . . 
+        . . . f f f 2 2 2 f f f . . . . 
+        . . . . f f f 2 f f f . . . . . 
+        . . . . 8 f f 2 f f 8 . . . . . 
+        . . . . 8 . 5 2 5 . 8 . . . . . 
+        `, SpriteKind.Enemy)
+    Captains.setPosition(randint(0, 100), 0)
+    Captains.setBounceOnWall(true)
+})
+game.onUpdateInterval(2000, function () {
+    Goon = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . 5 . 5 . . . . . . . 
+        . . . . . . 1 . 1 . . . . . . . 
+        . . . . . . 1 . 1 . . . . . . . 
+        . . . . . . 1 1 1 . . . . . . . 
+        . . . . . 1 1 f 1 1 . . . . . . 
+        . . . . 5 1 8 f 8 1 5 . . . . . 
+        . . . . 5 1 8 f 8 1 5 . . . . . 
+        . . . . . 1 1 f 1 1 . . . . . . 
+        . . . . . . f f f . . . . . . . 
+        `, SpriteKind.Enemy)
+    Goon.setPosition(randint(0, 100), 0)
+    Goon.setBounceOnWall(true)
+})
+game.onUpdateInterval(1000, function () {
+    Enemy_projectile = sprites.createProjectileFromSprite(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . 4 . . . . . . . 
+        . . . . . . . f f f . . . . . . 
+        . . . . . . 4 f 4 f 4 . . . . . 
+        . . . . . . . 2 4 2 . . . . . . 
+        . . . . . . . . 4 . . . . . . . 
         . . . . . . . . 8 . . . . . . . 
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `,img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . 8 8 8 8 8 . . . . . 
-        . . . . . . 8 . . . 8 . . . . . 
-        . . . . . . 8 . 8 . 8 . . . . . 
-        . . . . . . 8 . . . 8 . . . . . 
-        . . . . . . 8 8 8 8 8 . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `,img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . 8 8 8 8 8 8 8 8 8 . . . 
-        . . . . 8 . . . . . . . 8 . . . 
-        . . . . 8 . . . . . . . 8 . . . 
-        . . . . 8 . . . . . . . 8 . . . 
-        . . . . 8 . . . 8 . . . 8 . . . 
-        . . . . 8 . . . . . . . 8 . . . 
-        . . . . 8 . . . . . . . 8 . . . 
-        . . . . 8 . . . . . . . 8 . . . 
-        . . . . 8 8 8 8 8 8 8 8 8 . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `],
-    500,
-    false
-    )
+        `, Goon, 0, 100)
+})
+game.onUpdateInterval(500, function () {
+    Captains.vx = randint(-50, 50)
+})
+game.onUpdateInterval(500, function () {
+    Goon.vx = randint(-40, 40)
 })
