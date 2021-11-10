@@ -3,6 +3,7 @@ namespace SpriteKind {
     export const Missile = SpriteKind.create()
 }
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    music.pewPew.play()
     sprites.createProjectileFromSprite(img`
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
@@ -21,15 +22,25 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
         . . . . . . . . . . . . . . . . 
         . . . . . . . . . . . . . . . . 
         `, mySprite, 0, -100).setKind(SpriteKind.Missile)
+    pause(100)
+})
+sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Player, function (sprite, otherSprite) {
+    sprite.destroy()
+    music.smallCrash.play()
+    info.changeLifeBy(-1)
+    scene.cameraShake(4, 500)
 })
 sprites.onOverlap(SpriteKind.Enemy, SpriteKind.Player, function (sprite, otherSprite) {
     sprite.destroy()
     info.changeLifeBy(-1)
+    music.wawawawaa.play()
     scene.cameraShake(4, 500)
 })
 sprites.onOverlap(SpriteKind.Missile, SpriteKind.Enemy, function (sprite, otherSprite) {
     otherSprite.destroy()
+    info.changeScoreBy(1)
     scene.cameraShake(4, 500)
+    music.baDing.play()
 })
 let Enemy_projectile: Sprite = null
 let Goon: Sprite = null
